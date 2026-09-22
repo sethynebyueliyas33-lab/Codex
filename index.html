@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cosmic Curiosity Quiz</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f4f7ff;
+      --card: rgba(255, 255, 255, .84);
+      --ink: #17213d;
+      --muted: #68738f;
+      --line: #dfe5f2;
+      --primary: #6257e8;
+      --primary-dark: #493fca;
+      --accent: #ffb547;
+      --success: #21b87a;
+      --success-bg: #e9fbf3;
+      --danger: #ef5b74;
+      --danger-bg: #fff0f2;
+      --shadow: 0 24px 70px rgba(65, 74, 126, .14);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #11152a;
+        --card: rgba(27, 32, 59, .88);
+        --ink: #f2f4ff;
+        --muted: #aab2d0;
+        --line: #333b63;
+        --primary: #8e86ff;
+        --primary-dark: #b4afff;
+        --success-bg: #123e36;
+        --danger-bg: #481f31;
+        --shadow: 0 24px 70px rgba(0, 0, 0, .3);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px 16px;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 10%, rgba(255, 181, 71, .2), transparent 28%),
+        radial-gradient(circle at 90% 85%, rgba(98, 87, 232, .2), transparent 35%),
+        var(--bg);
+      font: 400 15px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    main { width: min(100%, 520px); }
+    .quiz-card {
+      overflow: hidden;
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, .32);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+    .topbar { padding: 25px 26px 0; }
+    .brand-row, .stats, .progress-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.02em; }
+    .brand-mark {
+      display: grid; place-items: center; width: 34px; height: 34px;
+      border-radius: 12px; color: #fff; background: linear-gradient(135deg, #7268f5, #b54fe5);
+      box-shadow: 0 8px 18px rgba(98, 87, 232, .3);
+    }
+    .score-pill {
+      padding: 7px 12px; color: var(--primary); background: rgba(98, 87, 232, .11);
+      border-radius: 999px; font-size: 13px; font-weight: 750;
+    }
+    .progress-meta { margin-top: 25px; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .progress-track { height: 8px; margin: 9px 0 0; background: var(--line); border-radius: 99px; }
+    .progress-fill { height: 100%; width: 10%; background: linear-gradient(90deg, var(--primary), #b650e5); border-radius: inherit; transition: width .45s ease; }
+    .content { padding: 30px 26px 27px; }
+    .eyebrow { margin: 0 0 10px; color: var(--primary); font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    h1, h2, p { margin-top: 0; }
+    h1 { max-width: 440px; margin-bottom: 25px; font-size: clamp(25px, 5vw, 33px); line-height: 1.14; letter-spacing: -.045em; }
+    .answers { display: grid; gap: 11px; }
+    .answer {
+      display: flex; align-items: center; gap: 13px; width: 100%; padding: 14px 15px;
+      color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 15px;
+      font: inherit; text-align: left; cursor: pointer; transition: transform .18s, border-color .18s, background .18s;
+    }
+    .answer:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--primary); background: rgba(98, 87, 232, .06); }
+    .answer:focus-visible { outline: 3px solid rgba(98, 87, 232, .3); outline-offset: 2px; }
+    .answer-letter { display: grid; place-items: center; flex: 0 0 29px; height: 29px; color: var(--muted); border: 1px solid var(--line); border-radius: 9px; font-size: 12px; font-weight: 800; }
+    .answer.correct { color: var(--success); background: var(--success-bg); border-color: var(--success); }
+    .answer.correct .answer-letter { color: #fff; background: var(--success); border-color: var(--success); }
+    .answer.wrong { color: var(--danger); background: var(--danger-bg); border-color: var(--danger); animation: shake .42s ease; }
+    .answer.wrong .answer-letter { color: #fff; background: var(--danger); border-color: var(--danger); }
+    .answer:disabled { cursor: default; }
+    .feedback { min-height: 25px; margin: 16px 0 0; color: var(--muted); font-size: 13px; font-weight: 650; }
+    .feedback.success { color: var(--success); }
+    .feedback.error { color: var(--danger); }
+    .next-btn, .restart-btn {
+      width: 100%; padding: 14px 18px; color: #fff; background: var(--primary); border: 0; border-radius: 14px;
+      font: inherit; font-weight: 800; cursor: pointer; transition: transform .18s, background .18s;
+    }
+    .next-btn:hover, .restart-btn:hover { transform: translateY(-2px); background: var(--primary-dark); }
+    .next-btn:focus-visible, .restart-btn:focus-visible { outline: 3px solid rgba(98, 87, 232, .3); outline-offset: 3px; }
+    .results { text-align: center; padding-top: 36px; padding-bottom: 36px; }
+    .result-emoji { display: grid; place-items: center; width: 104px; height: 104px; margin: 0 auto 20px; background: linear-gradient(145deg, rgba(255,181,71,.22), rgba(181,79,229,.17)); border-radius: 32px; font-size: 55px; animation: float 3s ease-in-out infinite; }
+    .results h2 { margin-bottom: 8px; font-size: 30px; letter-spacing: -.04em; }
+    .result-score { margin-bottom: 26px; color: var(--muted); }
+    .result-score strong { color: var(--ink); font-size: 24px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-7px); } 50% { transform: translateX(7px); } 75% { transform: translateX(-4px); } }
+    @keyframes float { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-8px) rotate(3deg); } }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="quiz-card" aria-live="polite">
+      <div class="topbar">
+        <div class="brand-row">
+          <div class="brand"><span class="brand-mark" aria-hidden="true">✦</span> Cosmic Curiosity</div>
+          <div class="score-pill" id="score">Score: 0</div>
+        </div>
+        <div class="progress-meta"><span id="question-count">Question 1 of 10</span><span id="progress-percent">10%</span></div>
+        <div class="progress-track" role="progressbar" aria-label="Quiz progress" aria-valuemin="0" aria-valuemax="10" aria-valuenow="1">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+      </div>
+      <div class="content" id="quiz-content">
+        <p class="eyebrow">Deep space dispatch</p>
+        <h1 id="question">Loading your first mission...</h1>
+        <div class="answers" id="answers"></div>
+        <p class="feedback" id="feedback" role="status"></p>
+        <button class="next-btn" id="next" hidden>Next question <span aria-hidden="true">→</span></button>
+      </div>
+    </section>
+  </main>
+  <script>
+    const questions = [
+      { text: "Which planet is known as the Red Planet?", answers: ["Venus", "Mars", "Jupiter", "Mercury"], correct: 1 },
+      { text: "What is the name of our galaxy?", answers: ["Andromeda", "Whirlpool", "Milky Way", "Sombrero"], correct: 2 },
+      { text: "Which is the largest planet in our solar system?", answers: ["Saturn", "Neptune", "Earth", "Jupiter"], correct: 3 },
+      { text: "What force keeps planets in orbit around the Sun?", answers: ["Magnetism", "Gravity", "Friction", "Electricity"], correct: 1 },
+      { text: "How long does sunlight take to reach Earth?", answers: ["About 8 minutes", "About 8 hours", "About 8 seconds", "About 8 days"], correct: 0 },
+      { text: "Which planet has the most prominent ring system?", answers: ["Uranus", "Saturn", "Mars", "Venus"], correct: 1 },
+      { text: "What is a space rock called once it reaches the ground?", answers: ["Asteroid", "Meteoroid", "Meteorite", "Comet"], correct: 2 },
+      { text: "Which was the first human-made object to reach space?", answers: ["Sputnik 1", "V-2 rocket", "Apollo 11", "Voyager 1"], correct: 1 },
+      { text: "What is the hottest planet in our solar system?", answers: ["Mercury", "Venus", "Mars", "Jupiter"], correct: 1 },
+      { text: "What do astronauts wear to stay protected outside a spacecraft?", answers: ["A flight suit", "A pressure suit", "A wetsuit", "A thermal blanket"], correct: 1 }
+    ];
+
+    let current = 0;
+    let score = 0;
+    let answered = false;
+    const $ = (id) => document.getElementById(id);
+
+    function renderQuestion() {
+      const item = questions[current];
+      answered = false;
+      $("question-count").textContent = `Question ${current + 1} of ${questions.length}`;
+      $("progress-percent").textContent = `${Math.round(((current + 1) / questions.length) * 100)}%`;
+      $("progress-fill").style.width = `${((current + 1) / questions.length) * 100}%`;
+      document.querySelector("[role=progressbar]").setAttribute("aria-valuenow", current + 1);
+      $("question").textContent = item.text;
+      $("feedback").textContent = "";
+      $("feedback").className = "feedback";
+      $("next").hidden = true;
+      $("next").textContent = current === questions.length - 1 ? "See my results  ✨" : "Next question  →";
+      $("answers").innerHTML = item.answers.map((answer, index) => `
+        <button class="answer" data-index="${index}">
+          <span class="answer-letter">${String.fromCharCode(65 + index)}</span><span>${answer}</span>
+        </button>`).join("");
+      $("answers").querySelectorAll(".answer").forEach((button) => button.addEventListener("click", () => chooseAnswer(Number(button.dataset.index))));
+    }
+
+    function chooseAnswer(choice) {
+      if (answered) return;
+      answered = true;
+      const item = questions[current];
+      const buttons = [...$("answers").querySelectorAll(".answer")];
+      buttons.forEach((button) => { button.disabled = true; });
+      if (choice === item.correct) {
+        score++;
+        buttons[choice].classList.add("correct");
+        $("feedback").textContent = "Stellar choice! Your knowledge is orbiting beautifully.";
+        $("feedback").className = "feedback success";
+      } else {
+        buttons[choice].classList.add("wrong");
+        buttons[item.correct].classList.add("correct");
+        $("feedback").textContent = `Not quite — the answer is ${item.answers[item.correct]}.`;
+        $("feedback").className = "feedback error";
+      }
+      $("score").textContent = `Score: ${score}`;
+      $("next").hidden = false;
+    }
+
+    function showResults() {
+      const percentage = score / questions.length;
+      const result = percentage === 1 ? ["🏆", "Cosmic legend!", "Perfect orbit — you know your universe inside out."] :
+        percentage >= .7 ? ["🚀", "Mission accomplished!", "A brilliant voyage through the stars."] :
+        percentage >= .4 ? ["🌙", "Promising explorer!", "Keep looking up — your next mission is waiting."] :
+        ["🪐", "Cadet in training!", "Every great astronaut starts with a first launch."];
+      $("quiz-content").className = "content results";
+      $("quiz-content").innerHTML = `
+        <div class="result-emoji" aria-hidden="true">${result[0]}</div>
+        <p class="eyebrow">Mission complete</p>
+        <h2>${result[1]}</h2>
+        <p class="result-score">You scored <strong>${score} / ${questions.length}</strong><br>${result[2]}</p>
+        <button class="restart-btn" id="restart">Launch again  ↗</button>`;
+      $("restart").addEventListener("click", () => {
+        current = 0; score = 0;
+        $("score").textContent = "Score: 0";
+        $("quiz-content").className = "content";
+        renderQuestion();
+      });
+    }
+
+    $("next").addEventListener("click", () => {
+      if (current === questions.length - 1) showResults();
+      else { current++; renderQuestion(); }
+    });
+    renderQuestion();
+  </script>
+</body>
+</html>
