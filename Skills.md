@@ -188,7 +188,7 @@ SOCKS5 只是代理接口，不应被当成现代加密 VPN 协议。
   - `us-central1`（Iowa）
   - `us-east1`（South Carolina）
 - 每月 30 GB 标准 Persistent Disk
-- 每月仅 1 GB 免费出站流量（北美到部分目的地区域）
+- 每月 1 GB 免费出站流量：从北美到中国、澳大利亚以外的目的地区域；不符合条件的流量可能收费（以官方最新规定为准）
 
 **非常重要：Free Tier 不等于无限流量。**
 
@@ -390,7 +390,7 @@ Netflix：⚠️ 不保证
 
 ### 《龙珠超》
 
-Netflix 日本当前页面明确显示《龙珠超》在当地不可观看。
+《龙珠超》是否在 Netflix 特定地区上架会随版权授权变化，必须在查询当天核实该地区片库，不得把过往查询结果写成长期结论。
 
 因此本 Skill 必须直接标记：
 
@@ -446,7 +446,7 @@ Agent 可以做普通连通性测试，但不得保证某个机房 IP 一定能�
 | X | ⚠️ 条件可用 | 可能触发登录验证 |
 | ChatGPT | ⚠️ 条件可用 | 受账号和地区政策影响 |
 | Netflix | ⚠️ 不保证 | 可能检测 VPN / 数据中心 IP |
-| Netflix《龙珠超》 | ❌ 不承诺 | 当前日本 Netflix 页面显示不可用；且 VPN 还可能进一步限制片库 |
+| Netflix《龙珠超》 | ❌ 不承诺 | 当前地区片库需要实时核验；VPN 还可能进一步限制片库 |
 | Disney+ / Hulu / Prime Video / Max | ⚠️ 不保证 | 流媒体地区与代理检测 |
 | 银行 / 支付 | ⚠️ 不推荐 | 容易触发风控 |
 
@@ -559,7 +559,7 @@ Netflix《龙珠超》：❌ 不承诺
 
 部署前必须：
 
-- 开启 Billing Budget
+- 开启 Billing Budget（注意：普通预算提醒不等于自动停止计费）
 - 设置费用提醒
 - 检查 Network Egress
 - 不假设免费 VM = 免费流量
@@ -604,7 +604,25 @@ https://help.netflix.com/en/node/114701
 
 ---
 
-# 14. 最终原则
+# 14. 定期维护与版本更新
+
+- 维护目标：定期核验 Google Cloud Free Tier、计费 / Network Egress、Xray / Hysteria / sing-box / Mihomo / WireGuard、Agent Skills 规范和流媒体 / 网站访问限制。
+- 资料优先级：官方文档、官方 GitHub Release / 安全公告；不将论坛传闻、营销话术或单次测速作为既定事实。
+- 更新规则：**有被核实的实质变化才提交**；没有变化不改正文、不添加无意义的时间戳。
+- 费用或兼容性改变需写清楚适用范围、更新时间、来源链接；不能把不同网络条件下的性能测试写成统一排名。
+- 订阅链接、IP、私钥和账号信息不得进入公开提交或历史。
+- 每次变更说明应包含：变动内容、为何重要、官方来源、哪些结论仍未验证。
+- 标准 Agent Skill 入口：[.agents/skills/gcp-proxy/SKILL.md](.agents/skills/gcp-proxy/SKILL.md)；本文件保留给 X 帖子读者作为完整参考。
+
+Google Cloud 免费层：https://docs.cloud.google.com/free/docs/free-cloud-features
+
+Google Cloud 预算提醒：https://docs.cloud.google.com/billing/docs/how-to/budgets
+
+Agent Skills 标准：https://agentskills.io/specification
+
+---
+
+# 15. 最终原则
 
 > **Google Cloud 提供服务器，协议负责传输，Skill 负责把经验留下来，Agent 负责执行。**
 
