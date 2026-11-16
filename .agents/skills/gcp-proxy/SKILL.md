@@ -20,7 +20,7 @@ compatibility: 需要可访问官方文档的网络环境；执行云部署需�
    - SOCKS5：本身不是加密 VPN，不要裸露到公网。
    **不对协议做无条件速度排名**；实际吞吐取决于 CPU、链路、地理位置、拥塞和配置。
    - 注意分层：VLESS 是代理协议，Vision 是 flow，RAW/TCP、WebSocket、gRPC、XHTTP 是传输方式，REALITY/TLS 是传输安全层。Project X 当前兼容表不支持 WebSocket + REALITY；WebSocket 应按兼容矩阵搭配 TLS。两端客户端与核心必须支持同一组合。
-4. **先算费用再部署**：确认 Free Tier 区域与实例规格、磁盘、外部 IPv4、Network Service Tier、出站计费和超额规则。Compute Engine Free Tier 表列出每月 1 GB 北美出站额度（目的地不含中国和澳大利亚）；Standard Tier 另有每个使用区域每月 200 GiB 免费额度，但走公共互联网、质量与可靠性低于 Premium Tier，不能把两种额度简单相加。标准 VM 使用中的静态或临时外部 IPv4 当前为 US$0.005/小时，每个账单账号每月仅 1 小时免费额度。普通 alerts-only Budget 只通知；Spend Cap 仅适用于当前列出的合格 API 服务（Gemini API、Agent Platform、Cloud Run、Cloud Run functions），Compute Engine 不在列表中，且固定 Compute / Storage 资源不会因 spend cap 暂停。
+4. **先算费用再部署**：确认 Free Tier 区域与实例规格、磁盘、外部 IPv4、Network Service Tier、出站计费和超额规则。Compute Engine Free Tier 表列出每月 1 GB 北美出站额度（目的地不含中国和澳大利亚）；Standard Tier 另有每个使用区域每月 200 GiB 免费额度，但走公共互联网、质量与可靠性低于 Premium Tier，不能把两种额度简单相加。标准 VM 使用中的静态或临时外部 IPv4 当前为 US$0.005/小时，每个账单账号每月仅 1 小时免费额度。普通 alerts-only Budget 只通知；Spend Cap 仅适用于当前列出的合格 API 服务（Gemini API、Gemini Enterprise Agent Platform（原 Vertex AI）、Cloud Run、Cloud Run functions），Compute Engine 不在列表中，且固定 Compute / Storage 资源不会因 spend cap 暂停。
 5. **输出安全配置**：按用户所需生成 VLESS URI、Mihomo YAML、sing-box JSON、WireGuard 配置说明等；Shadowrocket 格式必须先核对用户安装版本对具体协议、传输和字段的支持。只在用户授权且工具可用时实施部署。使用 `SERVER_HOST`、`CLIENT_UUID`、`SUBSCRIPTION_TOKEN` 等占位符，不要编造真实连接成功状态。
 6. **安全和访问限制**：不要把明文密码、UUID、私钥、有效订阅链接、云平台服务账号密钥提交公开 GitHub。云 IP 不保证 Netflix、Disney+、Prime Video 等流媒体片库解锁；对银行、支付等高风控服务提出限制和风险。不要把网站首页可访问当成具体内容可播放。
 7. **验收**：逐项说明是否实测过连接、握手、DNS / IPv6、性能、客户端导入、目标网站和实际账单。如果未验证，明确写“未测试”。
