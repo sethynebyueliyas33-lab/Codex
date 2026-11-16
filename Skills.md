@@ -161,7 +161,7 @@ SOCKS5 只是代理接口，不应被当成现代加密 VPN 协议。
 
 ---
 
-## 2.2 实用排名
+## 2.2 场景匹配度参考（不是速度排名）
 
 | 需求 | 推荐协议 | 结论 |
 | --- | --- | --- |
@@ -172,7 +172,7 @@ SOCKS5 只是代理接口，不应被当成现代加密 VPN 协议。
 | 整机 VPN | WireGuard | ⭐⭐⭐⭐⭐ |
 | 临时本地代理 | SOCKS5 | ⭐⭐ |
 
-> “最快”没有绝对答案。最终速度取决于服务器位置、网络质量、CPU、拥塞、客户端和网站本身。
+> 表格中的星级只表示与该使用场景的匹配程度，不代表跑分或绝对速度。“最快”没有绝对答案，实际吞吐取决于服务器位置、网络质量、CPU、拥塞、客户端和目标网站。
 
 ---
 
@@ -582,7 +582,7 @@ Netflix《龙珠超》：❌ 不承诺
 部署前必须：
 
 - 创建 alerts-only Budget 并设置费用提醒，但不要把通知预算当成自动停机。
-- Google Cloud 另有 Spend Cap Budgets：目前仅覆盖 Gemini API、Agent Platform、Cloud Run、Cloud Run functions 等符合条件的 API 服务，必须限定单个项目和单个合格服务，按月计算；**Compute Engine VM 不在当前合格服务列表中**。
+- Google Cloud 另有 Spend Cap Budgets：目前仅覆盖 Gemini API、Gemini Enterprise Agent Platform（原 Vertex AI）、Cloud Run、Cloud Run functions 等符合条件的 API 服务，必须限定单个项目和单个合格服务，按月计算；**Compute Engine VM 不在当前合格服务列表中**。
 - Spend Cap 使用总额估算触发，执行并非即时；在途请求可能继续计费，Compute / Storage 等持久资源的固定费用也不会因触发 spend cap 而暂停，报表延迟产生的超额仍可能收费。因此它不是整个 Cloud 账单的硬上限。
 - 检查公网 IPv4、Network Service Tier、出站流量、磁盘和其他配套 SKU；VM 免费不代表这些资源都免费。
 - 不假设免费 VM = 免费流量
