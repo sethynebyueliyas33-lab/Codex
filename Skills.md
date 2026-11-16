@@ -61,7 +61,7 @@
 
 ### 追求综合性能
 
-**VLESS + REALITY + Vision / TCP**
+**VLESS + REALITY + Vision（RAW/TCP）**
 
 推荐作为主要节点。
 
@@ -72,6 +72,8 @@
 - XTLS Vision 在合适环境下可以降低代理核心的 IO 开销
 - 不需要为了普通用法再套一层 WebSocket
 - 适合作为 Google Cloud 小型 VM 的主节点
+
+注意分清协议层次：VLESS 是代理协议，Vision 是 flow（流控模式），RAW/TCP、WebSocket、gRPC、XHTTP 是传输方式，REALITY/TLS 是传输安全层。Project X 当前兼容表显示 REALITY 可搭配 RAW、XHTTP、gRPC，不支持 WebSocket、HTTPUpgrade、mKCP；如果选 WebSocket，应按兼容矩阵搭配 TLS，不要拼成 VLESS + WebSocket + REALITY。两端核心和客户端都必须支持相应组合。
 
 推荐输出：
 
@@ -190,7 +192,13 @@ SOCKS5 只是代理接口，不应被当成现代加密 VPN 协议。
 - 每月 30 GB 标准 Persistent Disk
 - 每月 1 GB 免费出站流量：从北美到中国、澳大利亚以外的目的地区域；不符合条件的流量可能收费（以官方最新规定为准）
 
-**非常重要：Free Tier 不等于无限流量。**
+网络服务等级也会影响出站费用和质量：Premium Tier 是默认选项，走 Google 的全球骨干网络；Standard Tier 走公共互联网，价格较低但网络质量和可靠性通常也较低。Google 当前的 Network Service Tiers 文档另列 Standard Tier 每个使用区域每月 200 GiB 的免费额度（跨项目、按 SKU 计算）。这和 Compute Engine Free Tier 表中的 1 GB 额度不是同一条规则，不能简单相加；创建 VM 时要核对实际选用的网络等级、区域和账单 SKU。
+
+另一个容易漏算的费用是公网 IPv4：目前分配给标准 VM 使用的静态或临时外部 IPv4 为 **US$0.005/小时**，每个账单账号每月只有 1 小时免费额度。24 小时运行的 VM，单是公网 IPv4 按 30 天估算就约 US$3.60，VM 本身符合免费层也不代表公网地址免费。
+
+Free Tier 需要有效的 Cloud Billing 账号，额度按账单账号计算，超出额度按标准价格计费。Google 说明 Free Tier 没有固定结束日期，但可提前 30 天通知后调整或取消额度。
+
+**非常重要：Free Tier 不等于无限流量，也不等于整台 VM 的所有配套资源都免费。**
 
 VPN / 代理最容易产生费用的地方不是 VM 本身，而是网络出站流量。
 
@@ -288,7 +296,7 @@ Agent 生成节点后，优先同时输出以下格式：
 2. VLESS / 对应协议 URI
 3. Mihomo / Clash YAML
 4. sing-box JSON
-5. Shadowrocket 兼容导入格式
+5. Shadowrocket 导入格式（先核对当前 App 版本支持的协议、传输和字段组合；不得因支持 VLESS 就推断所有 REALITY / XHTTP / WS 配置都能导入）
 6. 参数检查表
 
 节点名称建议：
@@ -481,6 +489,20 @@ SSH 管理入口应尽量限制来源，并优先使用 Google Cloud 的安全�
 
 不要将管理面板暴露到 `0.0.0.0/0`。
 
+## 8.4 组件版本与安全更新
+
+截至 2026-11-16 核对的官方发布信息：
+
+- **Xray-core：** 官方 Releases 页面当前标记 `v26.10.31` 为 Latest。该版本发布说明将其标记为紧急安全更新：因 Linux 内核 MPTCP 风险，默认关闭 MPTCP，并建议尽快更新 Xray 与 Linux 内核。部署时应使用已修补版本，检查系统内核更新；不要为了测速或性能随意重新启用 MPTCP。
+- **Hysteria 2：** 官方最新发布为 `app/v2.14.0`（2026-11-15）。ACL 已切换到表达式规则，可使用 `acl.rules` / `acl.rulesFile`；旧的 `acl.file` / `acl.inline` 语法仍可用，也可用 `hysteria acl translate` 转换，并用 `hysteria acl test` 检查匹配结果。发布说明提到的小包上传包数提升，不等于所有网络下的总吞吐都提升相同比例。
+- **Mihomo：** 官方 Releases 页面当前最新为 `v1.19.34`（2026-11-11）。不要只看版本号；生成或升级配置前应阅读对应 release notes，尤其是订阅解析、协议字段和规则行为变化。
+- **sing-box：** 当前稳定版为 `1.14.4`，`1.15.0-alpha.13` 属于预发布版本。生产配置默认使用稳定版；除非用户明确要求测试预发布版。`1.15.0` 起 TUN 的 `stack` 字段已弃用，计划在 `1.17.0` 移除；旧配置迁移时要查官方 Deprecated / Migration 文档，不要继续生成已弃用字段。
+- **Shadowrocket：** 它是客户端，不提供代理服务器或节点资源。App Store 版本说明列出 VLESS Vision 等功能更新，但具体支持取决于用户安装的版本；输出导入配置前必须核对对应协议与传输组合，不能保证所有节点格式通用。
+
+版本快照只用于本次核查，不是永久固定版本。每次维护都应重新检查官方 Releases、Security Advisories 和迁移说明；若有新安全公告，优先处理安全修复。
+
+---
+
 ---
 
 # 9. 凭据占位符
@@ -559,9 +581,10 @@ Netflix《龙珠超》：❌ 不承诺
 
 部署前必须：
 
-- 开启 Billing Budget（注意：普通预算提醒不等于自动停止计费）
-- 设置费用提醒
-- 检查 Network Egress
+- 创建 alerts-only Budget 并设置费用提醒，但不要把通知预算当成自动停机。
+- Google Cloud 另有 Spend Cap Budgets：目前仅覆盖 Gemini API、Agent Platform、Cloud Run、Cloud Run functions 等符合条件的 API 服务，必须限定单个项目和单个合格服务，按月计算；**Compute Engine VM 不在当前合格服务列表中**。
+- Spend Cap 使用总额估算触发，执行并非即时；在途请求可能继续计费，Compute / Storage 等持久资源的固定费用也不会因触发 spend cap 而暂停，报表延迟产生的超额仍可能收费。因此它不是整个 Cloud 账单的硬上限。
+- 检查公网 IPv4、Network Service Tier、出站流量、磁盘和其他配套 SKU；VM 免费不代表这些资源都免费。
 - 不假设免费 VM = 免费流量
 - 不通过创建多个项目或账号规避免费额度限制
 - 遵守 Google Cloud AUP 与服务条款
@@ -581,6 +604,15 @@ https://docs.cloud.google.com/free/docs/free-cloud-features
 Google Cloud Acceptable Use Policy：
 https://cloud.google.com/terms/aup
 
+Google Cloud Spend Cap Budgets：
+https://docs.cloud.google.com/billing/docs/how-to/budgets-spend-caps
+
+Google Cloud Network Service Tiers：
+https://docs.cloud.google.com/network-tiers/docs/overview
+
+Google Cloud 网络价格（含外部 IPv4）：
+https://cloud.google.com/vpc/network-pricing
+
 Xray / Project X：
 https://xtls.github.io/
 
@@ -590,14 +622,32 @@ https://xtls.github.io/en/config/outbounds/vless.html
 Xray Transport：
 https://xtls.github.io/en/config/transport.html
 
+Xray-core Releases：
+https://github.com/XTLS/Xray-core/releases
+
 Hysteria 2：
 https://v2.hysteria.network/
+
+Hysteria Releases：
+https://github.com/HyNetworks/hysteria/releases
 
 sing-box：
 https://sing-box.sagernet.org/
 
+sing-box Releases：
+https://github.com/SagerNet/sing-box/releases
+
+sing-box Deprecated Features：
+https://sing-box.sagernet.org/deprecated/
+
 WireGuard：
 https://www.wireguard.com/
+
+Mihomo Releases：
+https://github.com/MetaCubeX/mihomo/releases
+
+Shadowrocket App Store：
+https://apps.apple.com/us/app/shadowrocket/id932747118
 
 Netflix VPN 帮助：
 https://help.netflix.com/en/node/114701
@@ -606,10 +656,10 @@ https://help.netflix.com/en/node/114701
 
 # 14. 定期维护与版本更新
 
-- 维护目标：定期核验 Google Cloud Free Tier、计费 / Network Egress、Xray / Hysteria / sing-box / Mihomo / WireGuard、Agent Skills 规范和流媒体 / 网站访问限制。
+- 维护目标：定期核验 Google Cloud Free Tier、外部 IPv4、Premium / Standard Network Service Tier、Spend Cap 合格范围、计费 / Network Egress、Xray / Hysteria / sing-box / Mihomo / WireGuard / Shadowrocket、Agent Skills 规范和流媒体 / 网站访问限制。
 - 资料优先级：官方文档、官方 GitHub Release / 安全公告；不将论坛传闻、营销话术或单次测速作为既定事实。
 - 更新规则：**有被核实的实质变化才提交**；没有变化不改正文、不添加无意义的时间戳。
-- 费用或兼容性改变需写清楚适用范围、更新时间、来源链接；不能把不同网络条件下的性能测试写成统一排名。
+- 费用或兼容性改变需写清楚适用范围、更新时间、来源链接；不能把不同网络条件下的性能测试写成统一排名。版本快照必须在下一次维护时重新核验，不能永久保留过期的 Latest 标记。
 - 订阅链接、IP、私钥和账号信息不得进入公开提交或历史。
 - 每次变更说明应包含：变动内容、为何重要、官方来源、哪些结论仍未验证。
 - 标准 Agent Skill 入口：[.agents/skills/gcp-proxy/SKILL.md](.agents/skills/gcp-proxy/SKILL.md)；本文件保留给 X 帖子读者作为完整参考。
