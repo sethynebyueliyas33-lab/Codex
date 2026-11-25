@@ -679,3 +679,67 @@ Agent Skills 标准：https://agentskills.io/specification
 > **不要把“能连接”写成“什么都能看”；不要把“免费 VM”写成“无限免费流量”。**
 
 > **公开仓库只存方法，真实节点凭据永远留在私有环境。**
+
+
+---
+
+# 16. AWS Agent Toolkit + EC2 + Hysteria 2 实践
+
+## 16.1 本次实践记录（2026-11-25）
+
+根据用户提供的操作截图，本次使用 AWS Agent Toolkit for AWS 配合 AI Agent 完成 AWS 环境检查与 EC2 部署：
+
+- AWS Experience：New AWS Experience。
+- 项目区域：`ap-southeast-2`（悉尼）。项目页面当时拒绝切换至新加坡 / 东京，因此选择在悉尼继续；这是本项目的实际限制，不应推广为所有 AWS 账户的普遍规则。
+- EC2：`t3.micro`、Ubuntu 24.04、8 GiB gp3。
+- 安全组：截图显示 TCP 22 与 UDP 443 已开放；SSH 来源范围仍需核验，推荐限制为可信管理 IP。
+- Hysteria 2：截图显示 v2.14.0，systemd 服务为 active，UDP 443 正在监听。
+- TLS：使用自签证书与 pinSHA256；客户端保持证书校验开启（`insecure` 关闭），SNI 记录为 `www.bing.com`。
+- 已生成二维码和 Clash 订阅配置；截图未证明客户端端到端连接、DNS、网页访问、速度或长期稳定性，因此这些项目仍标记为未验证。
+
+## 16.2 Agent Toolkit 官方资料
+
+- AWS 官方 GitHub：https://github.com/aws/agent-toolkit-for-aws
+- 官方 setup.md：https://raw.githubusercontent.com/aws/agent-toolkit-for-aws/refs/heads/main/setup-instructions/setup.md
+- AWS Quick Start：https://docs.aws.amazon.com/agent-toolkit/latest/userguide/quick-start.html
+
+按官方 setup.md 先检查操作系统、AWS CLI v2、uv 与网络连通性，再确认 profile、AWS Experience 类型和项目区域。登录必须通过官方浏览器流程；不要索取或保存 AWS Secret Access Key。
+
+注意：Agent Toolkit 服务指令使用 `us-east-1`，而用户 EC2 项目区域为 `ap-southeast-2`。两者用途不同，不要混淆。New AWS Experience 的项目区域以项目设置为准；一次项目无法切换区域的提示，不代表所有 AWS 账户均受同样限制。
+
+## 16.3 本次 EC2 / Hysteria 2 资源参数
+
+| 项目 | 本次记录 |
+| --- | --- |
+| Region | `ap-southeast-2`（Sydney） |
+| Instance | `t3.micro` |
+| OS | Ubuntu 24.04 |
+| EBS | 8 GiB gp3 |
+| Security Group | TCP 22、UDP 443 |
+| Proxy service | Hysteria 2 v2.14.0 |
+| Listener | UDP 443 |
+| TLS | 自签证书 + pinSHA256 |
+
+这些参数只作为一次部署案例。不得把 t3.micro / gp3 写成无条件永久免费；部署前核对账户 Free Tier 资格、使用期限、磁盘、公网 IPv4、出站流量与其他资源费用。SSH 管理端口应限制来源，不能默认对全网开放。
+
+## 16.4 安全与验收
+
+- 不在公开仓库提交 AWS Account ID、Access Key、Secret Key、实例 ID、公网 IP、Hysteria 密码、证书私钥、有效 pin、二维码或 Clash 订阅链接。
+- 自签证书必须通过 pinSHA256 正确校验；不要以关闭客户端证书校验作为常规解决方案。
+- 服务 active 和 UDP 443 监听不等于客户端连接成功。必须单独测试客户端握手、DNS、IPv4 / IPv6、目标网站和实际费用；没有测试就明确标记“未验证”。
+- 对外发布截图前，遮挡实例 ID、公网 IP、二维码和订阅信息。
+
+官方参考：
+
+- EC2 Free Tier：https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-free-tier-usage.html
+- EC2 定价：https://aws.amazon.com/ec2/pricing/on-demand/
+- VPC 定价：https://aws.amazon.com/vpc/pricing/
+- AWS Pricing Calculator：https://calculator.aws/
+- EC2 Security Groups：https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-security-groups.html
+- Hysteria 2 文档：https://v2.hysteria.network/
+- Hysteria Releases：https://github.com/HyNetworks/hysteria/releases
+
+## 16.5 对应 Agent Skill
+
+标准入口：[.agents/skills/aws-ec2-hysteria/SKILL.md](.agents/skills/aws-ec2-hysteria/SKILL.md)。
+
